@@ -1,0 +1,94 @@
+
+service: ni-key-ve
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: dev
+  region: us-west-2
+  environment:
+    DYNAMO_TABLE: keyValueTable
+    TEST: "0"
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+      Resource: { "Fn::Join" : ["", ["arn:aws:s3:::", { "Ref" : "ServerlessDeploymentBucket" } ] ]  }
+    - Effect: "Allow"
+      Action:
+        - "s3:PutObject"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+            - "Ref" : "ServerlessDeploymentBucket"
+            - "/*"
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:*"
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMO_TABLE}"
+
+functions:
+  status:
+    handler: nikeyve.status
+    events:
+      - http: 
+          method: get 
+          path: status/
+          private: false
+          cors: enable
+  create:
+    handler: nikeyve.create
+    events:
+      - http: 
+          method: post 
+          path: create/{id}
+          private: false
+          cors: enable
+  retrieve:
+    handler: nikeyve.retrieve
+    events:
+      - http: 
+          method: get 
+          path: key/{id}
+          private: false
+          cors: enable
+  retrieve_all:
+    handler: nikeyve.retrieve_all
+    events:
+      - http:
+          method: get
+          path: keys/
+          private: false
+          cors: enable
+  update:
+    handler: nikeyve.update
+    events:
+      - http: 
+          method: put 
+          path: key/{id}
+          private: false
+          cors: enable
+  delete:
+    handler: nikeyve.delete
+    events:
+      - http: 
+          method: delete 
+          path: key/{id}
+          private: false
+          cors: enable
+resources:
+  Resources:
+    keyValueTable:
+      Type: AWS::DynamoDB::Table 
+      Properties:
+        TableName: ${self:provider.environment.DYNAMO_TABLE}
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S 
+        KeySchema:
+          - AttributeName: id 
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
