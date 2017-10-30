@@ -28,7 +28,7 @@ curl -XGET https://utomwfr2t5.execute-api.us-west-2.amazonaws.com/dev/status
 POSTs and PUTs require a key and value, where the key is in the URL and the value is in a JSON object such as 
 ```
 {
-	"data: <value: pretty much anything you want>
+	"data": <value: pretty much anything you want>
 }
 ```
 Create a new key-value pair:
